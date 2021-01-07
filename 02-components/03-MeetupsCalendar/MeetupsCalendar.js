@@ -14,11 +14,13 @@ export const MeetupsCalendar = {
           <button class="rangepicker__selector-control-right" @click="incrementMonth"></button>
         </div>
       </div>
-      <div class="rangepicker__date-grid" v-for="k in numberOfWeeks" :key="k">
-        <div class="rangepicker__cell" v-for="j in 7" :key="j" :class="{ rangepicker__cell_inactive: days[j - 1 + (k-1)*7].inactive }">
+      <div class="rangepicker__date-grid">
+        <template v-for="k in numberOfWeeks">
+        <div class="rangepicker__cell" v-for="j in 7" :class="{ rangepicker__cell_inactive: days[j - 1 + (k-1)*7].inactive }">
           {{ days[j - 1 + (k-1)*7].dateCaption }}
           <a class="rangepicker__event" v-for="meetup in days[j - 1 + (k-1)*7].dateMeetups" :key="meetup.id">{{ meetup.title }}</a>
         </div>
+        </template>
       </div>
     </div>
   </div>`,
@@ -38,7 +40,7 @@ export const MeetupsCalendar = {
     return {
       firstDay: this.getMonthFirstDay(new Date()),
       firstDayOfWeek: 1,
-    }
+    };
   },
 
   // Вычислимые свойства помогут как с получением списка дней, так и с выводом информации
@@ -46,84 +48,98 @@ export const MeetupsCalendar = {
     selectedMonthYear() {
       return this.firstDay.toLocaleString(navigator.language, {
         month: 'long',
-        year: 'numeric'
+        year: 'numeric',
       });
     },
-      
-    calendarDateFrom() {
 
+    calendarDateFrom() {
       const day = this.firstDay.getDay();
-      const diff = this.firstDayOfWeek < day ? day - this.firstDayOfWeek - 1 : (6 + day - this.firstDayOfWeek) % 6 ;
-      const dtFrom = diff ? new Date(new Date(this.firstDay).setDate(-diff)) : new Date(this.firstDay);
+      const diff =
+        this.firstDayOfWeek < day
+          ? day - this.firstDayOfWeek - 1
+          : (6 + day - this.firstDayOfWeek) % 6;
+      const dtFrom = diff
+        ? new Date(new Date(this.firstDay).setDate(-diff))
+        : new Date(this.firstDay);
 
       return dtFrom;
     },
-   
-   
+
     numberOfWeeks() {
       // Last day of the month (date)
       const lastDay = this.getMonthLastDay(this.firstDay);
-      
+
       // Number of days in the month
       const numberOfDays = lastDay.getDate();
-      
+
       // Week day number for the first day of the month
       const day = this.firstDay.getDay();
-      
+
       // Days count from the first date on the calendar to the last day of the month
-      const daysCount = numberOfDays + (this.firstDayOfWeek < day ? day - this.firstDayOfWeek : (7 + day - this.firstDayOfWeek) % 7);
-            
-      const weeksCount = daysCount % 7  ? Math.floor(daysCount/7) + 1 :  Math.floor(daysCount/7);
+      const daysCount =
+        numberOfDays +
+        (this.firstDayOfWeek < day
+          ? day - this.firstDayOfWeek
+          : (7 + day - this.firstDayOfWeek) % 7);
+
+      const weeksCount =
+        daysCount % 7
+          ? Math.floor(daysCount / 7) + 1
+          : Math.floor(daysCount / 7);
 
       return weeksCount;
+    },
 
-   },
+    days() {
+      let dayArr = [];
+      let calDate = new Date(this.calendarDateFrom);
 
-   days() {
+      for (let i = 0; i < this.numberOfWeeks * 7; i++) {
+        let dayInfo = {
+          date: calDate,
+          dateCaption: calDate.getDate(),
+          inactive: this.firstDay.getMonth() !== calDate.getMonth(),
+          dateMeetups: this.meetups.filter(
+            (meetup) =>
+              new Date(meetup.date).getUTCFullYear() ===
+                calDate.getUTCFullYear() &&
+              new Date(meetup.date).getUTCMonth() === calDate.getUTCMonth() &&
+              new Date(meetup.date).getUTCDate() === calDate.getUTCDate(),
+          ),
+        };
 
-    let dayArr = [];
-    let calDate = new Date(this.calendarDateFrom);
+        dayArr.push(dayInfo);
+        calDate.setDate(calDate.getDate() + 1);
+      }
 
-    for (let i = 0; i < this.numberOfWeeks* 7; i++){
-      let dayInfo = { 
-        date: calDate,
-        dateCaption: calDate.getDate(),
-        inactive: this.firstDay.getMonth() !== calDate.getMonth(),
-        dateMeetups: this.meetups.filter(meetup => 
-          ((new Date(meetup.date)).getUTCFullYear() ===  calDate.getUTCFullYear()) && 
-          ((new Date(meetup.date)).getUTCMonth() ===  calDate.getUTCMonth()) && 
-          ((new Date(meetup.date)).getUTCDate() ===  calDate.getUTCDate())
-          )
-      };
-
-      dayArr.push(dayInfo);
-      calDate.setDate(calDate.getDate() + 1);
-    }
-
-    return dayArr;
-
-   }
-
+      return dayArr;
+    },
   },
 
   // Методы понадобятся для переключения между месяцами
   methods: {
-    
-    getMonthFirstDay: function(date) {
-      return new Date(date.getFullYear(), date.getMonth(), 1);
+    getMonthFirstDay: function (date) {
+      return new Date((new Date(date.getFullYear(), date.getMonth(), 1).toUTCString()));
     },
-    
-    getMonthLastDay: function(date) {
+
+    getMonthLastDay: function (date) {
       return new Date(date.getFullYear(), date.getMonth() + 1, 0);
     },
-    
-    incrementMonth: function() {
-      this.firstDay = new Date(this.firstDay.getFullYear(), this.firstDay.getMonth() + 1, 1);
+
+    incrementMonth: function () {
+      this.firstDay = new Date(
+        this.firstDay.getFullYear(),
+        this.firstDay.getMonth() + 1,
+        1,
+      );
     },
 
-    decrementMonth: function() {
-      this.firstDay = new Date(this.firstDay.getFullYear(), this.firstDay.getMonth() - 1, 1);
+    decrementMonth: function () {
+      this.firstDay = new Date(
+        this.firstDay.getFullYear(),
+        this.firstDay.getMonth() - 1,
+        1,
+      );
     },
-
-  }
+  },
 };
