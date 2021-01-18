@@ -9,7 +9,7 @@ export const MeetupAgendaItem = {
       </div>
       <div class="meetup-agenda__item-col">{{ agendaItem.startsAt }} - {{ agendaItem.endsAt }}</div>
       <div class="meetup-agenda__item-col">
-        <h5 class="meetup-agenda__title"><span v-html="itemTitle"></span></h5>
+        <h5 class="meetup-agenda__title">{{ itemTitle }}</span></h5>
         <p v-show="agendaItem.speaker || agendaItem.language">
           <span v-show="agendaItem.speaker">{{ agendaItem.speaker }}</span>
           <span v-show="agendaItem.speaker && agendaItem.language" class="meetup-agenda__dot"></span>
